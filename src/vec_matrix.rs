@@ -1,5 +1,5 @@
 use super::*;
-use num_traits::{AsPrimitive, One, Zero, Bounded};
+use num_traits::{Bounded, One, Zero};
 use quad_rand::RandomRange;
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
@@ -11,55 +11,23 @@ pub struct VecMatrix<T: Copy + Clone> {
     height: usize,
 }
 
-impl<T: Copy + Zero + One + RandomRange + Bounded + 'static> Matrix for VecMatrix<T>
-where
-    u8: AsPrimitive<T>,
-{
-    type Output = T;
-    fn new(width: usize, height: usize) -> VecMatrix<T> {
-        VecMatrix {
-            data: vec![Zero::zero(); width * height],
-            width,
-            height,
-        }
-    }
-
-    fn new_std_conv_matrix(width: usize, height: usize) -> Self {
-        let mut data = vec![One::one(); width * height];
-        data[width / 2 + (height / 2) * width] = Zero::zero();
-        VecMatrix {
-            data,
-            width,
-            height,
-        }
-    }
-
-    fn new_random(width: usize, height: usize) -> Self {
-        let mut data = Vec::new();
-        for _ in 0..(width * height) {
-            data.push(gen_range::<T>(T::min_value(), T::max_value()));
-        }
-        VecMatrix {
-            data,
-            width,
-            height,
-        }
-    }
-
-    fn new_random_range(width: usize, height: usize, range: RangeInclusive<Self::Output>) -> Self {
-        let mut data = Vec::new();
-        for _ in 0..(width * height) {
-            data.push(gen_range(*range.start(), *range.end()));
-        }
-        VecMatrix {
-            data,
-            width,
-            height,
-        }
-    }
-
+impl<T: Copy + 'static> Matrix<T> for VecMatrix<T> {
     fn index(&self, (ixx, ixy): (usize, usize)) -> T {
         self.data[ixx + ixy * self.width]
+    }
+
+    fn new_with<F: FnMut((usize, usize)) -> T>(width: usize, height: usize, mut f: F) -> Self {
+        let mut data = Vec::with_capacity(width * height);
+        for ixy in 0..height {
+            for ixx in 0..width {
+                data.push(f((ixx, ixy)));
+            }
+        }
+        VecMatrix {
+            data,
+            width,
+            height,
+        }
     }
 
     fn set_at_index(&mut self, (ixx, ixy): (usize, usize), value: T) {
@@ -72,6 +40,62 @@ where
 
     fn height(&self) -> usize {
         self.height
+    }
+
+    fn new(width: usize, height: usize, value: T) -> Self {
+        VecMatrix {
+            data: vec![value; width * height],
+            width,
+            height,
+        }
+    }
+}
+
+impl<T: Copy + Default> MatrixDefault<T> for VecMatrix<T> {
+    fn new_default(width: usize, height: usize) -> VecMatrix<T> {
+        VecMatrix {
+            data: vec![T::default(); width * height],
+            width,
+            height,
+        }
+    }
+}
+
+impl<T: Copy + Zero + One> MatrixStdConv<T> for VecMatrix<T> {
+    fn new_std_conv_matrix(width: usize, height: usize) -> Self {
+        let mut data = vec![One::one(); width * height];
+        data[width / 2 + (height / 2) * width] = Zero::zero();
+        VecMatrix {
+            data,
+            width,
+            height,
+        }
+    }
+}
+
+impl<T: Copy + RandomRange + Bounded> MatrixRandom<T> for VecMatrix<T> {
+    fn new_random(width: usize, height: usize) -> Self {
+        let mut data = Vec::new();
+        for _ in 0..(width * height) {
+            data.push(gen_range::<T>(T::min_value(), T::max_value()));
+        }
+        VecMatrix {
+            data,
+            width,
+            height,
+        }
+    }
+
+    fn new_random_range(width: usize, height: usize, range: RangeInclusive<T>) -> Self {
+        let mut data = Vec::new();
+        for _ in 0..(width * height) {
+            data.push(gen_range(*range.start(), *range.end()));
+        }
+        VecMatrix {
+            data,
+            width,
+            height,
+        }
     }
 }
 

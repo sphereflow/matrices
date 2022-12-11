@@ -1,16 +1,43 @@
 use std::ops::RangeInclusive;
 
-pub trait Matrix {
-    type Output: Copy;
-    fn new(width: usize, height: usize) -> Self;
+use num_traits::{One, Zero};
+use quad_rand::RandomRange;
+
+pub trait MatrixDefault<T: Copy + Default> {
+    fn new_default(width: usize, height: usize) -> Self;
+}
+
+pub trait MatrixRandom<T: Copy + RandomRange> {
     fn new_random(width: usize, height: usize) -> Self;
-    fn new_random_range(width: usize, height: usize, range: RangeInclusive<Self::Output>) -> Self;
+    fn new_random_range(width: usize, height: usize, range: RangeInclusive<T>) -> Self;
+}
+
+pub trait MatrixStdConv<T: Copy + Zero + One> {
     fn new_std_conv_matrix(width: usize, height: usize) -> Self;
-    fn index(&self, ix: (usize, usize)) -> Self::Output;
-    fn set_at_index(&mut self, ix: (usize, usize), value: Self::Output);
+}
+
+pub trait MatrixNew<
+    T: Copy + Zero + One + RandomRange + Default,
+    M: MatrixDefault<T> + MatrixRandom<T> + MatrixStdConv<T>,
+>
+{
+}
+
+impl<
+        T: Copy + Zero + One + RandomRange + Default,
+        M: MatrixDefault<T> + MatrixRandom<T> + MatrixStdConv<T>,
+    > MatrixNew<T, M> for M
+{
+}
+
+pub trait Matrix<T: Copy> {
+    fn new(width: usize, height: usize, value: T) -> Self;
+    fn new_with<F: FnMut((usize, usize)) -> T>(width: usize, height: usize, f: F) -> Self;
+    fn index(&self, ix: (usize, usize)) -> T;
+    fn set_at_index(&mut self, ix: (usize, usize), value: T);
     fn width(&self) -> usize;
     fn height(&self) -> usize;
-    fn clear(&mut self, val: Self::Output) {
+    fn clear(&mut self, val: T) {
         for y in 0..self.height() {
             for x in 0..self.width() {
                 self.set_at_index((x, y), val);
@@ -26,7 +53,7 @@ pub trait Matrix {
     /// 0 1 1 1 0
     /// 0 0 0 0 0
     /// make sure the matrix is a square
-    fn donut(&mut self, range: RangeInclusive<usize>, val: Self::Output) {
+    fn donut(&mut self, range: RangeInclusive<usize>, val: T) {
         let wh = self.width();
         let whhalf = wh / 2;
         for ixx in 0..wh {
@@ -42,7 +69,7 @@ pub trait Matrix {
         }
     }
 
-    fn set_at_index_sym(&mut self, sym: Symmetry, (ixx, ixy): (usize, usize), val: Self::Output) {
+    fn set_at_index_sym(&mut self, sym: Symmetry, (ixx, ixy): (usize, usize), val: T) {
         // zero based indexing width and height values
         let w = self.width() - 1;
         let h = self.height() - 1;
