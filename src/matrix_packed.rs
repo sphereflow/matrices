@@ -39,6 +39,7 @@ impl Matrix<u8> for MatrixPacked {
         res
     }
 
+    #[inline(always)]
     fn index(&self, (ixx, ixy): (usize, usize)) -> u8 {
         let ix_tile_x = ixx / 8;
         let ix_tile_y = ixy / 8;
@@ -46,6 +47,7 @@ impl Matrix<u8> for MatrixPacked {
         (self.tiles[ix_tile_x + ix_tile_y * num_tiles_y][ixy % 8].to_le_bytes())[ixx % 8]
     }
 
+    #[inline(always)]
     fn set_at_index(&mut self, (ixx, ixy): (usize, usize), value: u8) {
         let ix_tile_x = ixx / 8;
         let ix_tile_y = ixy / 8;
@@ -116,7 +118,7 @@ impl MatrixRandom<u8> for MatrixPacked {
 impl MatrixStdConv<u8> for MatrixPacked {
     fn new_std_conv_matrix(width: usize, height: usize) -> MatrixPacked {
         let rep: u64 = u64::from_be_bytes([1; 8]);
-        let mut tiles = Vec::from_iter(repeat([rep; 8]).take((width * height) as usize));
+        let mut tiles = Vec::from_iter(repeat([rep; 8]).take(width * height));
 
         // set the middle elemnt to 0
         let ix_tile_x = ((width / 2).max(1) - 1) / 8;
@@ -135,6 +137,7 @@ impl MatrixStdConv<u8> for MatrixPacked {
     }
 }
 
+#[cfg(tests)]
 mod tests {
     use super::MatrixPacked;
     use crate::traits::Matrix;

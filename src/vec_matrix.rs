@@ -12,10 +12,6 @@ pub struct VecMatrix<T: Copy + Clone> {
 }
 
 impl<T: Copy + 'static> Matrix<T> for VecMatrix<T> {
-    fn index(&self, (ixx, ixy): (usize, usize)) -> T {
-        self.data[ixx + ixy * self.width]
-    }
-
     fn new_with<F: FnMut((usize, usize)) -> T>(width: usize, height: usize, mut f: F) -> Self {
         let mut data = Vec::with_capacity(width * height);
         for ixy in 0..height {
@@ -30,6 +26,12 @@ impl<T: Copy + 'static> Matrix<T> for VecMatrix<T> {
         }
     }
 
+    #[inline(always)]
+    fn index(&self, (ixx, ixy): (usize, usize)) -> T {
+        self.data[ixx + ixy * self.width]
+    }
+
+    #[inline(always)]
     fn set_at_index(&mut self, (ixx, ixy): (usize, usize), value: T) {
         self.data[ixx + ixy * self.width] = value;
     }
