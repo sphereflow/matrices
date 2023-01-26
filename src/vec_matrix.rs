@@ -1,10 +1,12 @@
 use super::*;
 use num_traits::{Bounded, One, Zero};
 use quad_rand::RandomRange;
+#[cfg(serde)]
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct VecMatrix<T: Copy + Clone> {
     pub data: Vec<T>,
     width: usize,

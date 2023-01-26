@@ -1,24 +1,32 @@
 use super::*;
 use num_traits::{Bounded, One, Zero};
 use quad_rand::RandomRange;
+#[cfg(feature = "serde")]
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+#[cfg(feature = "serde")]
 use serde_with::serde_as;
 
 /// row major array of arrays
 /// N: width, M: height
-#[serde_as]
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[cfg_attr(feature = "serde", serde_as)]
+#[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ConstMatrix<
-    T: Copy + Clone + Serialize + DeserializeOwned,
+    #[cfg(feature = "serde")] T: Copy + Clone + Serialize + DeserializeOwned,
+    #[cfg(not(feature = "serde"))] T: Copy + Clone,
     const M: usize,
     const N: usize,
 > {
-    #[serde_as(as = "[[_;N];M]")]
+    #[cfg_attr(feature = "serde", serde_as(as = "[[_;N];M]"))]
     pub data: [[T; N]; M],
 }
 
-impl<T: Copy + Serialize + DeserializeOwned + 'static, const M: usize, const N: usize> Matrix<T>
-    for ConstMatrix<T, M, N>
+impl<
+        #[cfg(feature = "serde")] T: Copy + Serialize + DeserializeOwned + 'static,
+        #[cfg(not(feature = "serde"))] T: Copy + 'static,
+        const M: usize,
+        const N: usize,
+    > Matrix<T> for ConstMatrix<T, M, N>
 {
     fn new(_width: usize, _height: usize, value: T) -> Self {
         ConstMatrix {
@@ -52,8 +60,12 @@ impl<T: Copy + Serialize + DeserializeOwned + 'static, const M: usize, const N: 
     }
 }
 
-impl<T: Copy + Default + Serialize + DeserializeOwned, const M: usize, const N: usize>
-    MatrixDefault<T> for ConstMatrix<T, M, N>
+impl<
+        #[cfg(feature = "serde")] T: Copy + Default + Serialize + DeserializeOwned,
+        #[cfg(not(feature = "serde"))] T: Copy + Default,
+        const M: usize,
+        const N: usize,
+    > MatrixDefault<T> for ConstMatrix<T, M, N>
 {
     fn new_default(_width: usize, _height: usize) -> ConstMatrix<T, M, N> {
         ConstMatrix {
@@ -62,8 +74,12 @@ impl<T: Copy + Default + Serialize + DeserializeOwned, const M: usize, const N: 
     }
 }
 
-impl<T: Copy + Zero + One + Serialize + DeserializeOwned, const M: usize, const N: usize>
-    MatrixStdConv<T> for ConstMatrix<T, M, N>
+impl<
+        #[cfg(feature = "serde")] T: Copy + Zero + One + Serialize + DeserializeOwned,
+        #[cfg(not(feature = "serde"))] T: Copy + Zero + One,
+        const M: usize,
+        const N: usize,
+    > MatrixStdConv<T> for ConstMatrix<T, M, N>
 {
     fn new_std_conv_matrix(_width: usize, _height: usize) -> ConstMatrix<T, M, N> {
         let mut data = [[One::one(); N]; M];
@@ -73,7 +89,8 @@ impl<T: Copy + Zero + One + Serialize + DeserializeOwned, const M: usize, const 
 }
 
 impl<
-        T: Copy + Zero + One + RandomRange + Serialize + DeserializeOwned + Bounded,
+        #[cfg(feature = "serde")] T: Copy + Zero + One + RandomRange + Serialize + DeserializeOwned + Bounded,
+        #[cfg(not(feature = "serde"))] T: Copy + Zero + One + RandomRange + Bounded,
         const M: usize,
         const N: usize,
     > MatrixRandom<T> for ConstMatrix<T, M, N>
