@@ -1,7 +1,7 @@
 use super::*;
 use num_traits::{Bounded, One, Zero};
 use quad_rand::RandomRange;
-#[cfg(serde)]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
