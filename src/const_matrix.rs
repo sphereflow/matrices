@@ -11,7 +11,6 @@ use serde_with::serde_as;
 #[cfg(not(feature = "serde"))]
 #[derive(Debug, Clone, Copy)]
 pub struct ConstMatrix<T: Copy + Clone, const M: usize, const N: usize> {
-    #[cfg_attr(feature = "serde", serde_as(as = "[[_;N];M]"))]
     pub data: [[T; N]; M],
 }
 
