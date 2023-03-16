@@ -8,22 +8,28 @@ use serde_with::serde_as;
 
 /// row major array of arrays
 /// N: width, M: height
-#[cfg_attr(feature = "serde", serde_as)]
+#[cfg(not(feature = "serde"))]
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct ConstMatrix<T: Copy + Clone, const M: usize, const N: usize> {
+    #[cfg_attr(feature = "serde", serde_as(as = "[[_;N];M]"))]
+    pub data: [[T; N]; M],
+}
+
+#[cfg(feature = "serde")]
+#[serde_as]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ConstMatrix<
-    #[cfg(feature = "serde")] T: Copy + Clone + Serialize + DeserializeOwned,
-    #[cfg(not(feature = "serde"))] T: Copy + Clone,
+    T: Copy + Clone + Serialize + DeserializeOwned,
     const M: usize,
     const N: usize,
 > {
-    #[cfg_attr(feature = "serde", serde_as(as = "[[_;N];M]"))]
+    #[serde_as(as = "[[_;N];M]")]
     pub data: [[T; N]; M],
 }
 
 impl<
         #[cfg(feature = "serde")] T: Copy + Serialize + DeserializeOwned + 'static,
-        #[cfg(not(feature = "serde"))] T: Copy + 'static,
+        #[cfg(not(feature = "serde"))] T: Copy,
         const M: usize,
         const N: usize,
     > Matrix<T> for ConstMatrix<T, M, N>
